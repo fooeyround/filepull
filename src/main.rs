@@ -18,6 +18,11 @@ fn main() {
 
     let mut working_path = String::from("");
 
+    let mut raw_output_path = String::from("");
+
+
+    let mut output_path = util::get_current_dir();
+
     let mut file_extentions:Vec<String> = Vec::new();
 
 
@@ -38,9 +43,10 @@ Take files with a certain extention and pull them into the current directory
 
   -h, --help       display this help and exit
   -v  --version   output version information and exit
-  -f --folder      chose the folder to traverse
   -a, --all   move files of all file extentions
-  -r, --removefolders   Remove Empty Folders after moving files (removes already empty folders too!)
+  -f --folder      chose the folder to traverse
+  -o, --outputpath   Set the output path (default is current directory)
+
   <anything else>  add to the list of file extentions! (only counted if they start with . (.tar.gz would work!))"
                 );
 
@@ -61,6 +67,10 @@ Take files with a certain extention and pull them into the current directory
                 working_path = String::from(opts.value().expect("argument parsing error"));
             }
 
+            Opt::Short('o') | Opt::Long("outputpath") => {
+                raw_output_path = String::from(opts.value().expect("argument parsing error"));
+            }
+
             _ => eprintln!("unknown option: {}", opt),
         }
     }
@@ -79,6 +89,16 @@ Take files with a certain extention and pull them into the current directory
         eprintln!("The path {} does not exist!", working_path);
         return;
     }
+
+
+    if !util::get_current_dir().join(&raw_output_path).exists() {
+        eprintln!("The output path {} does not exist!", &raw_output_path);
+        return;
+    }
+
+
+    output_path = util::get_current_dir().join(&raw_output_path);
+
 
     let path_to_use = util::get_current_dir().join(working_path);
 
@@ -116,7 +136,7 @@ Take files with a certain extention and pull them into the current directory
     let bar = ProgressBar::new(files_to_remove.len() as u64);
 
     for file in files_to_remove.clone() {
-        util::move_file(&file, &path_to_use);
+        util::move_file(&file, &output_path);
         bar.inc(1);
     }
 
