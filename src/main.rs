@@ -1,8 +1,10 @@
 use getargs::{Opt, Options};
 use std::env::args;
-use std::fs;
-use std::path::PathBuf;
 use std::process::exit;
+use indicatif::ProgressBar;
+
+// use util::{get_current_dir, is_valid_extention, traverse_dir, print_results};
+mod util;
 
 fn main() {
 
@@ -73,12 +75,12 @@ Take files with a certain extention and pull them into the current directory
 
 
 
-    if !get_current_dir().join(working_path.clone()).exists() {
+    if !util::get_current_dir().join(working_path.clone()).exists() {
         eprintln!("The path {} does not exist!", working_path);
         return;
     }
 
-    let path_to_use = get_current_dir().join(working_path);
+    let path_to_use = util::get_current_dir().join(working_path);
 
 
 
@@ -86,120 +88,32 @@ Take files with a certain extention and pull them into the current directory
 
 
 
-    let files_removed = traverse_dir(get_current_dir(),path_to_use,file_extentions, wild_card);
+    let files_to_remove = util::collect_files_to_move(util::get_current_dir(),&path_to_use,file_extentions, wild_card);
 
+    util::print_move_warn(&files_to_remove);
 
-    print_results(files_removed);
+    println!("Continue? (press enter to continue, anything else to abort)");
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input).unwrap();
 
-}
-
-
-
-
-//make a function that gets the current directory and puts it in a string
-
-fn get_current_dir() -> PathBuf {
-    //let current_path = std::env::current_dir().unwrap();
-    // let current_path_string = current_path.to_str().unwrap();
-    // return current_path_string.to_string();
-    return std::env::current_dir().unwrap();
-}
-
-//make a function that take in a PathBuf and a list of file extentions, and a boolean to tell if you want to delete empty folders, checks all the folders inside and moves them into the current directory and deletes the folder if it is empty and the boolean is true.
-
-fn traverse_dir(current_path:PathBuf, path_to_traverse: PathBuf, list:Vec<String>, wild_card: bool) -> Vec<String> {
-    let mut moved_files: Vec<String> = Vec::new();
-
-
-    //iterate through the files in the directory
-    for entry in fs::read_dir(&path_to_traverse).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-
-        if !path.is_file() {
-            continue;
-        }
-
-        //get the file name
-        let file_name = (&path).file_name().unwrap().to_str().unwrap().to_string();
-
-        
-        if path.is_file() && (wild_card || is_valid_extention(file_name.clone(), list.clone())) {
-            moved_files.push(path.to_str().unwrap().to_string());
-            fs::rename(&path, (&current_path).join(&file_name)).unwrap();
-        }
-
-        if path.is_dir() {
-            moved_files.append(&mut traverse_dir(current_path.clone(), path.clone(), list.clone(), wild_card));
-        }
-
+    if !(vec!["yes","y",""].contains(&input.trim())) {
+        println!("Aborting!");
+        exit(0);
     }
 
-    return moved_files
 
-}
 
-fn print_results(moved_files: Vec<String>) {
-    println!("Moved Files:");
-    for file in moved_files {
-        println!("{}", file);
+    let bar = ProgressBar::new(files_to_remove.len() as u64);
+
+    for file in files_to_remove.clone() {
+        util::move_file(&file, &path_to_use);
+        bar.inc(1);
     }
+
+    bar.finish();
+
+    util::print_results(&files_to_remove);
+
 }
 
 
-
-//make a function that takes in a string of a file name and returns a boolean of if the file is has ends with an extetion in the list of file extentions
-// fn is_valid_extention(file_name: String, list: Vec<String>) -> bool {
-
-//     let file_extention = get_file_extention(file_name);
-//     return list.contains(&file_extention);
-// }
-
-
-//make a function that checks a list for a file extention, if the extention fits inside another it also counts and returns true
-fn is_valid_extention(file_name: String, list: Vec<String>) -> bool {
-
-    let file_extention = get_file_extention(file_name);
-    for extention in list.clone() {
-        if extention.ends_with(&file_extention) {
-            return true;
-        }
-    }
-    return list.contains(&file_extention);
-}
-
-//make a function to get the file extention from a string of a file name
-fn get_file_extention(file_name: String) -> String {
-    let mut file_extention = String::new();
-    let mut found_dot = false;
-    for char in file_name.chars() {
-        if (char == '.') && found_dot {
-            file_extention = String::new();
-        } else if found_dot {
-            file_extention.push(char)
-        }
-        if char == '.' {
-            found_dot = true;
-        }
-    }
-    return file_extention;
-}
-
-
-// //make a function that takes in a string of a file name and returns a string of the file name with only the the extention (file.tar.gz -> .gz)
-// fn get_last_file_extention(file_name: String) -> String {
-//     let mut file_extention = String::new();
-//     let mut found_dot = false;
-//     for char in file_name.chars() {
-//         if (char == '.') && found_dot {
-//             file_extention = String::new();
-//         } else if found_dot {
-//             file_extention.push(char)
-//         }
-//         if char == '.' {
-//             found_dot = true;
-//         }
-//     }
-//     return file_extention;
-
-// }
