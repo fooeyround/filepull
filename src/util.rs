@@ -97,5 +97,5 @@ pub fn move_file(file: &PathBuf, to_path: &PathBuf) {
 
 
 pub fn clear_screen() {
-    print!("{}[2J", 27 as char);
+    print!("{esc}c", esc = 27 as char);
 }
