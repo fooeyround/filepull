@@ -35,18 +35,9 @@ pub fn collect_files_to_move(current_path:PathBuf, path_to_traverse: &PathBuf, l
 
 }
 
-pub fn print_results(moved_files: &Vec<PathBuf>) {
-    println!("Moved Files:");
+pub fn print_file_list(moved_files: &Vec<PathBuf>) {
     for file in moved_files {
-        println!("{}", file.file_name().unwrap().to_str().unwrap());
-    }
-}
-
-
-pub fn print_move_warn(moved_files: &Vec<PathBuf>) {
-    println!("Are you sure you want to move these files?");
-    for file in moved_files {
-        println!("{}", file.file_name().unwrap().to_str().unwrap());
+        println!("- {}", file.file_name().unwrap().to_str().unwrap());
     }
 }
 
@@ -102,3 +93,9 @@ pub fn move_file(file: &PathBuf, to_path: &PathBuf) {
     }
 }
 
+
+
+
+pub fn clear_screen() {
+    print!("{}[2J", 27 as char);
+}

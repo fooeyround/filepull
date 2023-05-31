@@ -90,9 +90,16 @@ Take files with a certain extention and pull them into the current directory
 
     let files_to_remove = util::collect_files_to_move(util::get_current_dir(),&path_to_use,file_extentions, wild_card);
 
-    util::print_move_warn(&files_to_remove);
 
-    println!("Continue? (press enter to continue, anything else to abort)");
+
+    util::clear_screen();
+
+    println!("Are you sure you want to move these files to {}?", util::get_current_dir().to_str().unwrap());
+    util::print_file_list(&files_to_remove);
+
+    println!("(press enter to continue, anything else to abort)");
+
+
     let mut input = String::new();
     std::io::stdin().read_line(&mut input).unwrap();
 
@@ -100,6 +107,9 @@ Take files with a certain extention and pull them into the current directory
         println!("Aborting!");
         exit(0);
     }
+
+
+    util::clear_screen();
 
 
 
@@ -112,7 +122,11 @@ Take files with a certain extention and pull them into the current directory
 
     bar.finish();
 
-    util::print_results(&files_to_remove);
+
+    util::clear_screen();
+
+    println!("Moved Files:");
+    util::print_file_list(&files_to_remove);
 
 }
 
